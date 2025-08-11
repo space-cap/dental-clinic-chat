@@ -1,0 +1,174 @@
+# 치과 병원 채팅 시스템 설정
+spring:
+  application:
+    name: dentalchat
+
+  # 데이터베이스 설정
+  datasource:
+    url: jdbc:h2:mem:dentalchat;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ''
+    hikari:
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      maximum-pool-size: 10
+
+  # H2 웹 콘솔 설정
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
+  # JPA 설정
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # 가상 스레드 설정 (Java 21)
+  threads:
+    virtual:
+      enabled: true
+
+  # WebSocket 설정
+  websocket:
+    max-text-message-size: 64KB
+    max-binary-message-size: 64KB
+    max-session-idle-timeout: 30m
+
+  # JSON 설정
+  jackson:
+    time-zone: Asia/Seoul
+    date-format: yyyy-MM-dd HH:mm:ss
+    property-naming-strategy: SNAKE_CASE
+
+  # 프로파일별 설정
+  profiles:
+    active: dev
+    
+  # 캐시 설정
+  cache:
+    type: simple
+    cache-names: users,chatrooms,messages
+
+# 서버 설정
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    session:
+      timeout: 30m
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+  http2:
+    enabled: true
+
+# 로깅 설정
+logging:
+  level:
+    com.ezlevup.dentalchat: DEBUG
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging: DEBUG
+    org.springframework.messaging.simp: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 치과 병원 채팅 시스템 커스텀 설정
+dental-chat:
+  # 채팅방 설정
+  chat-room:
+    max-waiting-time: 300000  # 5분 (밀리초)
+    auto-close-idle-time: 1800000  # 30분 (밀리초)
+    max-message-length: 1000
+    
+  # 상담원 설정
+  admin:
+    max-concurrent-rooms: 5
+    auto-assign: true
+    
+  # 알림 설정
+  notification:
+    new-customer-sound: true
+    message-sound: true
+    
+  # 보안 설정
+  security:
+    session-timeout: 1800  # 30분 (초)
+    max-login-attempts: 5
+
+# 관리 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# 스레드풀 설정 (가상 스레드 보완)
+task:
+  execution:
+    pool:
+      core-size: 2
+      max-size: 4
+      queue-capacity: 100
+      thread-name-prefix: dental-chat-
+
+---
+# Development 프로파일
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    com.ezlevup.dentalchat: DEBUG
+    org.springframework.web.socket: DEBUG
+
+---
+# Production 프로파일
+spring:
+  config:
+    activate:
+      on-profile: prod
+      
+  jpa:
+    show-sql: false
+    
+  h2:
+    console:
+      enabled: false
+
+logging:
+  level:
+    com.ezlevup.dentalchat: INFO
+    org.springframework.web.socket: WARN
+    root: WARN

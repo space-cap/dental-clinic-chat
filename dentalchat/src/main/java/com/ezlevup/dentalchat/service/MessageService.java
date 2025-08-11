@@ -1,6 +1,8 @@
 package com.ezlevup.dentalchat.service;
 
-import com.ezlevup.dentalchat.dto.ChatMessageDto;
+import com.ezlevup.dentalchat.dto.ChatMessage;
+import com.ezlevup.dentalchat.dto.MessageType;
+import com.ezlevup.dentalchat.dto.UserRole;
 import com.ezlevup.dentalchat.entity.ChatRoom;
 import com.ezlevup.dentalchat.entity.Message;
 import com.ezlevup.dentalchat.entity.User;
@@ -33,32 +35,42 @@ public class MessageService {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public Message saveMessage(ChatMessageDto messageDto) {
-        ChatRoom chatRoom = chatRoomRepository.findByRoomId(messageDto.getRoomId())
+    public Message saveMessage(ChatMessage messageDto) {
+        ChatRoom chatRoom = chatRoomRepository.findByRoomId(messageDto.roomId())
                 .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
 
-        User sender = userRepository.findByUsername(messageDto.getSenderUsername())
+        User sender = userRepository.findByUsername(messageDto.sender())
                 .orElseThrow(() -> new IllegalArgumentException("발신자를 찾을 수 없습니다."));
 
         Message message = new Message();
         message.setChatRoom(chatRoom);
         message.setSender(sender);
-        message.setContent(messageDto.getContent());
-        message.setMessageType(messageDto.getMessageType());
+        message.setContent(messageDto.content());
+        
+        // MessageType 변환 - record의 MessageType을 entity의 MessageType으로
+        Message.MessageType entityMessageType;
+        switch (messageDto.type()) {
+            case CHAT -> entityMessageType = Message.MessageType.CHAT;
+            case JOIN -> entityMessageType = Message.MessageType.JOIN;
+            case LEAVE -> entityMessageType = Message.MessageType.LEAVE;
+            default -> entityMessageType = Message.MessageType.CHAT;
+        }
+        message.setMessageType(entityMessageType);
 
         Message savedMessage = messageRepository.save(message);
 
         // WebSocket으로 메시지 전송
-        ChatMessageDto responseDto = new ChatMessageDto(
-                messageDto.getRoomId(),
+        UserRole responseRole = sender.getUserType() == User.UserType.ADMIN ? UserRole.ADMIN : UserRole.CUSTOMER;
+        ChatMessage responseDto = new ChatMessage(
+                messageDto.content(),
                 sender.getUsername(),
-                sender.getNickname(),
-                messageDto.getContent(),
-                messageDto.getMessageType()
+                responseRole,
+                messageDto.type(),
+                savedMessage.getSentAt(),
+                messageDto.roomId()
         );
-        responseDto.setTimestamp(savedMessage.getSentAt().format(formatter));
 
-        messagingTemplate.convertAndSend("/topic/room/" + messageDto.getRoomId(), responseDto);
+        messagingTemplate.convertAndSend("/topic/room/" + messageDto.roomId(), responseDto);
 
         return savedMessage;
     }
@@ -75,14 +87,14 @@ public class MessageService {
         Message savedMessage = messageRepository.save(message);
 
         // WebSocket으로 시스템 메시지 전송
-        ChatMessageDto responseDto = new ChatMessageDto(
-                roomId,
-                "system",
-                "시스템",
+        ChatMessage responseDto = new ChatMessage(
                 content,
-                Message.MessageType.SYSTEM
+                "system",
+                UserRole.ADMIN,
+                MessageType.CHAT,
+                savedMessage.getSentAt(),
+                roomId
         );
-        responseDto.setTimestamp(savedMessage.getSentAt().format(formatter));
 
         messagingTemplate.convertAndSend("/topic/room/" + roomId, responseDto);
 
@@ -95,20 +107,36 @@ public class MessageService {
     }
 
     @Transactional(readOnly = true)
-    public List<ChatMessageDto> getChatHistory(String roomId) {
+    public List<ChatMessage> getChatHistory(String roomId) {
         List<Message> messages = messageRepository.findByRoomIdOrderBySentAtAsc(roomId);
         
         return messages.stream()
                 .map(message -> {
-                    ChatMessageDto dto = new ChatMessageDto(
-                            roomId,
-                            message.getSender() != null ? message.getSender().getUsername() : "system",
-                            message.getSender() != null ? message.getSender().getNickname() : "시스템",
+                    String sender = message.getSender() != null ? message.getSender().getUsername() : "system";
+                    UserRole senderRole;
+                    if (message.getSender() == null) {
+                        senderRole = UserRole.ADMIN; // 시스템 메시지
+                    } else {
+                        senderRole = message.getSender().getUserType() == User.UserType.ADMIN ? UserRole.ADMIN : UserRole.CUSTOMER;
+                    }
+                    
+                    // Entity MessageType을 DTO MessageType으로 변환
+                    MessageType dtoMessageType;
+                    switch (message.getMessageType()) {
+                        case CHAT, SYSTEM -> dtoMessageType = MessageType.CHAT;
+                        case JOIN -> dtoMessageType = MessageType.JOIN;
+                        case LEAVE -> dtoMessageType = MessageType.LEAVE;
+                        default -> dtoMessageType = MessageType.CHAT;
+                    }
+                    
+                    return new ChatMessage(
                             message.getContent(),
-                            message.getMessageType()
+                            sender,
+                            senderRole,
+                            dtoMessageType,
+                            message.getSentAt(),
+                            roomId
                     );
-                    dto.setTimestamp(message.getSentAt().format(formatter));
-                    return dto;
                 })
                 .toList();
     }

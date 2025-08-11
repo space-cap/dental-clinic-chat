@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(del \"C:\\workdir\\github-space-cap\\dental-clinic-chat\\dentalchat\\src\\main\\resources\\application.properties\")",
+      "Bash(./mvnw clean compile)",
+      "Bash(move ChatMessageDto.java ChatMessage.java)",
+      "Bash(mv:*)",
+      "Bash(./mvnw test)"
     ],
     "deny": []
   }
