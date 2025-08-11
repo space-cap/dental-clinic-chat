@@ -5,6 +5,14 @@ import com.ezlevup.dentalchat.entity.ChatRoom;
 import com.ezlevup.dentalchat.entity.User;
 import com.ezlevup.dentalchat.service.ChatRoomService;
 import com.ezlevup.dentalchat.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +27,8 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin")
+@Tag(name = "Admin", description = "관리자 대시보드 및 채팅방 관리 API")
+@SecurityRequirement(name = "basicAuth")
 public class AdminController {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
@@ -30,6 +40,8 @@ public class AdminController {
     private UserService userService;
 
     @GetMapping("/dashboard")
+    @Operation(summary = "관리자 대시보드", description = "관리자 대시보드 페이지를 제공합니다.")
+    @ApiResponse(responseCode = "200", description = "성공적으로 대시보드 페이지를 반환")
     public String dashboard(Model model) {
         logger.info("관리자 대시보드 접속");
         
@@ -44,6 +56,12 @@ public class AdminController {
 
     @GetMapping("/api/waiting-customers")
     @ResponseBody
+    @Operation(summary = "대기 고객 목록 조회", description = "현재 상담을 기다리는 고객들의 목록을 조회합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공적으로 대기 고객 목록을 반환",
+            content = @Content(schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
     public ResponseEntity<Map<String, Object>> getWaitingCustomers() {
         try {
             List<ChatRoom> waitingRooms = chatRoomService.findWaitingRooms();
@@ -67,7 +85,14 @@ public class AdminController {
 
     @GetMapping("/api/active-rooms/{adminUsername}")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> getActiveRooms(@PathVariable String adminUsername) {
+    @Operation(summary = "관리자 활성 채팅방 조회", description = "특정 관리자가 담당하는 활성 채팅방 목록을 조회합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공적으로 활성 채팅방 목록을 반환"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 - 유효하지 않은 관리자"),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    public ResponseEntity<Map<String, Object>> getActiveRooms(
+        @Parameter(description = "관리자 사용자명", required = true) @PathVariable String adminUsername) {
         try {
             Optional<User> admin = userService.findByUsername(adminUsername);
             if (admin.isEmpty() || admin.get().getUserType() != UserType.ADMIN) {
@@ -95,7 +120,14 @@ public class AdminController {
 
     @PostMapping("/api/assign-customer")
     @ResponseBody
+    @Operation(summary = "고객-관리자 배정", description = "대기 중인 고객을 특정 관리자에게 배정합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공적으로 고객을 관리자에게 배정"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 - 필수 파라미터 누락 또는 유효하지 않은 관리자"),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
     public ResponseEntity<Map<String, Object>> assignCustomerToAdmin(
+            @Parameter(description = "배정 요청 정보 (roomId, adminUsername)", required = true)
             @RequestBody Map<String, String> request) {
         try {
             String roomId = request.get("roomId");
@@ -138,6 +170,11 @@ public class AdminController {
 
     @PostMapping("/api/process-next-customer")
     @ResponseBody
+    @Operation(summary = "다음 고객 자동 배정", description = "대기열에서 다음 고객을 자동으로 배정합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공적으로 다음 고객을 배정하거나 대기 고객이 없음을 반환"),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
     public ResponseEntity<Map<String, Object>> processNextCustomer() {
         try {
             ChatRoom processedRoom = chatRoomService.processNextWaitingCustomer();
@@ -173,7 +210,14 @@ public class AdminController {
 
     @PostMapping("/api/end-chat/{roomId}")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> endChatRoom(@PathVariable String roomId) {
+    @Operation(summary = "채팅방 종료", description = "지정된 채팅방을 종료합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공적으로 채팅방을 종료"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 - 유효하지 않은 채팅방"),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    public ResponseEntity<Map<String, Object>> endChatRoom(
+        @Parameter(description = "종료할 채팅방 ID", required = true) @PathVariable String roomId) {
         try {
             ChatRoom endedRoom = chatRoomService.endChatRoom(roomId);
             
@@ -200,7 +244,14 @@ public class AdminController {
 
     @GetMapping("/api/room-details/{roomId}")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> getRoomDetails(@PathVariable String roomId) {
+    @Operation(summary = "채팅방 상세 정보 조회", description = "지정된 채팅방의 상세 정보를 조회합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공적으로 채팅방 상세 정보를 반환"),
+        @ApiResponse(responseCode = "404", description = "채팅방을 찾을 수 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    public ResponseEntity<Map<String, Object>> getRoomDetails(
+        @Parameter(description = "조회할 채팅방 ID", required = true) @PathVariable String roomId) {
         try {
             Optional<ChatRoom> room = chatRoomService.findByRoomId(roomId);
             

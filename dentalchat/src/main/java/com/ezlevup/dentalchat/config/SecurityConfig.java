@@ -25,8 +25,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/home", "/login", "/webjars/**", "/css/**", "/js/**", "/images/**").permitAll()
                 .requestMatchers("/chat/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/websocket-docs/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
