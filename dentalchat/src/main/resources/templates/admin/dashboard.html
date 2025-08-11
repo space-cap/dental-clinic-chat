@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 대시보드 - 치과 상담 시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .dashboard-header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .admin-setup {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-setup h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .admin-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .admin-form input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .admin-form input:focus {
+            border-color: #4facfe;
+        }
+
+        .admin-form button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .admin-form button:hover {
+            transform: translateY(-1px);
+        }
+
+        .admin-status {
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            color: #333;
+            font-size: 1.3rem;
+            margin: 0;
+        }
+
+        .card-count {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .waiting-customer {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ffc107;
+            transition: transform 0.2s;
+        }
+
+        .waiting-customer:hover {
+            transform: translateX(5px);
+        }
+
+        .customer-info {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .customer-details h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .customer-details p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .assign-button {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: transform 0.2s;
+        }
+
+        .assign-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .active-room {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #28a745;
+            transition: transform 0.2s;
+        }
+
+        .active-room:hover {
+            transform: translateX(5px);
+        }
+
+        .room-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .view-button {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        .view-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .end-button {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+        }
+
+        .end-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .control-button {
+            background: linear-gradient(135deg, #6f42c1 0%, #563d7c 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .refresh-button {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 30px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .customer-info, .room-actions {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>🦷 관리자 대시보드</h1>
+            <p>실시간 치과 상담 관리 시스템</p>
+        </div>
+
+        <div class="admin-setup">
+            <h2>👤 관리자 설정</h2>
+            <div class="admin-form">
+                <input type="text" id="adminUsername" placeholder="관리자 이름을 입력하세요" maxlength="20">
+                <button onclick="setAdmin()">관리자 설정</button>
+            </div>
+            <div class="admin-status" id="adminStatus" style="display: none;">
+                <strong id="currentAdmin"></strong>로 로그인되었습니다.
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #333;">⚡ 빠른 작업</h2>
+            <div class="control-buttons">
+                <button class="control-button" onclick="processNextCustomer()">
+                    다음 고객 자동 배정
+                </button>
+                <button class="control-button refresh-button" onclick="refreshDashboard()">
+                    대시보드 새로고침
+                </button>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">⏳ 대기 중인 고객</h2>
+                    <span class="card-count" id="waitingCount" th:text="${waitingQueueSize}">0</span>
+                </div>
+                <div id="waitingCustomers">
+                    <div th:if="${waitingRooms.isEmpty()}" class="empty-state">
+                        대기 중인 고객이 없습니다.
+                    </div>
+                    <div th:each="room : ${waitingRooms}" class="waiting-customer">
+                        <div class="customer-info">
+                            <div class="customer-details">
+                                <h4 th:text="${room.customer.username}">고객명</h4>
+                                <p>
+                                    방 ID: <span th:text="${room.roomId}">room_12345</span> 
+                                    | 대기시간: <span class="waiting-time" th:attr="data-created=${room.createdAt}">계산 중...</span>
+                                </p>
+                                <p th:if="${room.customerNotes}" th:text="'요청사항: ' + ${room.customerNotes}">요청사항</p>
+                            </div>
+                            <button class="assign-button" th:onclick="'assignCustomer(\'' + ${room.roomId} + '\')'">
+                                배정하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">💬 내 활성 채팅방</h2>
+                    <span class="card-count" id="activeCount">0</span>
+                </div>
+                <div id="activeChatRooms">
+                    <div class="empty-state">
+                        관리자를 설정하면 활성 채팅방이 표시됩니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        let currentAdminUsername = null;
+
+        function setAdmin() {
+            const username = document.getElementById('adminUsername').value.trim();
+            if (!username) {
+                showNotification('관리자 이름을 입력하세요.', 'error');
+                return;
+            }
+
+            currentAdminUsername = username;
+            document.getElementById('currentAdmin').textContent = username;
+            document.getElementById('adminStatus').style.display = 'block';
+            document.getElementById('adminUsername').disabled = true;
+            
+            showNotification('관리자가 설정되었습니다.', 'success');
+            loadActiveRooms();
+        }
+
+        function assignCustomer(roomId) {
+            if (!currentAdminUsername) {
+                showNotification('먼저 관리자를 설정하세요.', 'error');
+                return;
+            }
+
+            fetch('/admin/api/assign-customer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    roomId: roomId,
+                    adminUsername: currentAdminUsername
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('고객이 성공적으로 배정되었습니다.', 'success');
+                    refreshDashboard();
+                } else {
+                    showNotification(data.error || '배정에 실패했습니다.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('배정 중 오류가 발생했습니다.', 'error');
+            });
+        }
+
+        function processNextCustomer() {
+            fetch('/admin/api/process-next-customer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    refreshDashboard();
+                } else {
+                    showNotification(data.message || '처리할 고객이 없습니다.', 'info');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('처리 중 오류가 발생했습니다.', 'error');
+            });
+        }
+
+        function endChatRoom(roomId) {
+            if (!confirm('정말 이 채팅방을 종료하시겠습니까?')) {
+                return;
+            }
+
+            fetch(`/admin/api/end-chat/${roomId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('채팅방이 종료되었습니다.', 'success');
+                    refreshDashboard();
+                } else {
+                    showNotification(data.error || '종료에 실패했습니다.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('종료 중 오류가 발생했습니다.', 'error');
+            });
+        }
+
+        function loadWaitingCustomers() {
+            fetch('/admin/api/waiting-customers')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.waitingRooms) {
+                        updateWaitingCustomers(data.waitingRooms);
+                        document.getElementById('waitingCount').textContent = data.queueSize;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading waiting customers:', error);
+                });
+        }
+
+        function loadActiveRooms() {
+            if (!currentAdminUsername) {
+                return;
+            }
+
+            fetch(`/admin/api/active-rooms/${currentAdminUsername}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.activeRooms) {
+                        updateActiveRooms(data.activeRooms);
+                        document.getElementById('activeCount').textContent = data.roomCount;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading active rooms:', error);
+                });
+        }
+
+        function updateWaitingCustomers(rooms) {
+            const container = document.getElementById('waitingCustomers');
+            
+            if (rooms.length === 0) {
+                container.innerHTML = '<div class="empty-state">대기 중인 고객이 없습니다.</div>';
+                return;
+            }
+
+            container.innerHTML = rooms.map(room => `
+                <div class="waiting-customer">
+                    <div class="customer-info">
+                        <div class="customer-details">
+                            <h4>${room.customer.username}</h4>
+                            <p>방 ID: ${room.roomId} | 대기시간: ${calculateWaitingTime(room.createdAt)}</p>
+                            ${room.customerNotes ? `<p>요청사항: ${room.customerNotes}</p>` : ''}
+                        </div>
+                        <button class="assign-button" onclick="assignCustomer('${room.roomId}')">
+                            배정하기
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateActiveRooms(rooms) {
+            const container = document.getElementById('activeChatRooms');
+            
+            if (rooms.length === 0) {
+                container.innerHTML = '<div class="empty-state">활성 채팅방이 없습니다.</div>';
+                return;
+            }
+
+            container.innerHTML = rooms.map(room => `
+                <div class="active-room">
+                    <div class="customer-details">
+                        <h4>${room.customer.username}</h4>
+                        <p>방 ID: ${room.roomId} | 시작: ${formatDateTime(room.startedAt)}</p>
+                        <span class="status-badge status-active">활성</span>
+                    </div>
+                    <div class="room-actions">
+                        <a href="/chat?room=${room.roomId}&user=${currentAdminUsername}&role=ADMIN" 
+                           class="view-button" target="_blank">채팅방 열기</a>
+                        <button class="end-button" onclick="endChatRoom('${room.roomId}')">
+                            종료하기
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function refreshDashboard() {
+            loadWaitingCustomers();
+            loadActiveRooms();
+            showNotification('대시보드가 새로고침되었습니다.', 'info');
+        }
+
+        function calculateWaitingTime(createdAt) {
+            const created = new Date(createdAt);
+            const now = new Date();
+            const diffMs = now - created;
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            
+            if (diffMins < 1) return '방금 전';
+            if (diffMins < 60) return `${diffMins}분 전`;
+            const diffHours = Math.floor(diffMins / 60);
+            return `${diffHours}시간 ${diffMins % 60}분 전`;
+        }
+
+        function formatDateTime(dateTime) {
+            const date = new Date(dateTime);
+            return date.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // 초기 로드 및 자동 새로고침
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWaitingCustomers();
+            
+            // 30초마다 대기 고객 목록 새로고침
+            setInterval(loadWaitingCustomers, 30000);
+            
+            // 10초마다 활성 채팅방 새로고침 (관리자가 설정된 경우에만)
+            setInterval(() => {
+                if (currentAdminUsername) {
+                    loadActiveRooms();
+                }
+            }, 10000);
+        });
+
+        // 대기시간 실시간 업데이트
+        setInterval(() => {
+            const waitingTimes = document.querySelectorAll('.waiting-time');
+            waitingTimes.forEach(element => {
+                const createdAt = element.getAttribute('data-created');
+                if (createdAt) {
+                    element.textContent = calculateWaitingTime(createdAt);
+                }
+            });
+        }, 1000);
+    </script>
+</body>
+</html>
