@@ -7,7 +7,12 @@
       "Bash(./mvnw clean compile)",
       "Bash(move ChatMessageDto.java ChatMessage.java)",
       "Bash(mv:*)",
-      "Bash(./mvnw test)"
+      "Bash(./mvnw test)",
+      "Bash(del \"C:\\workdir\\github-space-cap\\dental-clinic-chat\\dentalchat\\src\\test\\java\\com\\ezlevup\\dentalchat\\WebSocketIntegrationTest.java\")",
+      "Bash(del \"C:\\workdir\\github-space-cap\\dental-clinic-chat\\dentalchat\\src\\test\\java\\com\\ezlevup\\dentalchat\\ChatRoomIntegrationTest.java\")",
+      "Bash(del \"C:\\workdir\\github-space-cap\\dental-clinic-chat\\dentalchat\\src\\test\\java\\com\\ezlevup\\dentalchat\\service\\ChatRoomServiceTest.java\")",
+      "Bash(del \"C:\\workdir\\github-space-cap\\dental-clinic-chat\\dentalchat\\src\\test\\java\\com\\ezlevup\\dentalchat\\controller\\ChatControllerTest.java\")",
+      "Bash(./mvnw test:*)"
     ],
     "deny": []
   }
