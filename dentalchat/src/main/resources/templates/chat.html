@@ -79,6 +79,44 @@
             background: #28a745;
         }
 
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.85rem;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+
+        .bg-primary {
+            background-color: #007bff !important;
+            color: white;
+        }
+
+        .bg-warning {
+            background-color: #ffc107 !important;
+            color: #212529;
+        }
+
+        .logout-link {
+            color: #dc3545;
+            text-decoration: none;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .logout-link:hover {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
         .chat-messages {
             flex: 1;
             padding: 20px;
@@ -302,7 +340,17 @@
                 <div class="status-dot" id="statusDot"></div>
                 <span id="statusText">연결 대기 중...</span>
             </div>
-            <div id="roomInfo"></div>
+            <div class="user-info">
+                <span th:if="${username}">
+                    👤 <span th:text="${username}">사용자</span>
+                    <span th:if="${authorities}" class="badge" 
+                          th:classappend="${#strings.contains(authorities.toString(), 'ROLE_ADMIN')} ? 'bg-warning' : 'bg-primary'"
+                          th:text="${#strings.contains(authorities.toString(), 'ROLE_ADMIN')} ? '관리자' : '사용자'">
+                    </span>
+                </span>
+                <a href="/logout" th:if="${username}" class="logout-link">로그아웃</a>
+                <div id="roomInfo"></div>
+            </div>
         </div>
 
         <div class="chat-messages" id="chatMessages">
@@ -337,6 +385,12 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script th:inline="javascript">
+        window.authenticatedUser = {
+            username: [[${username}]] || '',
+            isAdmin: [[${#strings.contains(authorities.toString(), 'ROLE_ADMIN')}]] || false
+        };
+    </script>
     <script src="/js/app.js"></script>
 </body>
 </html>

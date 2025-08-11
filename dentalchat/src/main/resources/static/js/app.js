@@ -190,4 +190,18 @@ window.addEventListener('beforeunload', function() {
 
 document.addEventListener('DOMContentLoaded', function() {
     adjustTextareaHeight();
+    
+    if (window.authenticatedUser && window.authenticatedUser.username) {
+        usernameInput.value = window.authenticatedUser.username;
+        usernameInput.disabled = true;
+        
+        if (window.authenticatedUser.isAdmin) {
+            userRoleSelect.value = 'ADMIN';
+        } else {
+            userRoleSelect.value = 'CUSTOMER';
+        }
+        userRoleSelect.disabled = true;
+        
+        joinButton.textContent = '상담방 입장';
+    }
 });
