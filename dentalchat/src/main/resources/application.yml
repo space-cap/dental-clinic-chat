@@ -68,7 +68,7 @@ spring:
 
 # 서버 설정
 server:
-  port: 8080
+  port: 8088
   servlet:
     context-path: /
     session:

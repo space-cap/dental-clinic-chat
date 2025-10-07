@@ -13,7 +13,9 @@
       "Bash(del \"C:\\workdir\\github-space-cap\\dental-clinic-chat\\dentalchat\\src\\test\\java\\com\\ezlevup\\dentalchat\\service\\ChatRoomServiceTest.java\")",
       "Bash(del \"C:\\workdir\\github-space-cap\\dental-clinic-chat\\dentalchat\\src\\test\\java\\com\\ezlevup\\dentalchat\\controller\\ChatControllerTest.java\")",
       "Bash(./mvnw test:*)",
-      "Bash(./mvnw:*)"
+      "Bash(./mvnw:*)",
+      "Bash(taskkill:*)",
+      "Bash(wmic process where:*)"
     ],
     "deny": []
   }

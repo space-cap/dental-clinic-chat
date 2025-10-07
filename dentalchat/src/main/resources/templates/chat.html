@@ -344,8 +344,8 @@
                 <span th:if="${username}">
                     👤 <span th:text="${username}">사용자</span>
                     <span th:if="${authorities}" class="badge" 
-                          th:classappend="${#strings.contains(authorities.toString(), 'ROLE_ADMIN')} ? 'bg-warning' : 'bg-primary'"
-                          th:text="${#strings.contains(authorities.toString(), 'ROLE_ADMIN')} ? '관리자' : '사용자'">
+                          th:classappend="${authorities != null and #strings.contains(authorities.toString(), 'ROLE_ADMIN')} ? 'bg-warning' : 'bg-primary'"
+                          th:text="${authorities != null and #strings.contains(authorities.toString(), 'ROLE_ADMIN')} ? '관리자' : '사용자'">
                     </span>
                 </span>
                 <a href="/logout" th:if="${username}" class="logout-link">로그아웃</a>
@@ -388,7 +388,7 @@
     <script th:inline="javascript">
         window.authenticatedUser = {
             username: [[${username}]] || '',
-            isAdmin: [[${#strings.contains(authorities.toString(), 'ROLE_ADMIN')}]] || false
+            isAdmin: [[${authorities != null and #strings.contains(authorities.toString(), 'ROLE_ADMIN')}]] || false
         };
     </script>
     <script src="/js/app.js"></script>

@@ -3,10 +3,12 @@ package com.ezlevup.dentalchat.controller;
 import com.ezlevup.dentalchat.dto.ChatMessage;
 import com.ezlevup.dentalchat.dto.MessageType;
 import com.ezlevup.dentalchat.dto.UserRole;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
@@ -20,14 +22,40 @@ public class ChatController {
 
     @MessageMapping("/chat.sendMessage/{roomId}")
     @SendTo("/topic/room/{roomId}")
-    public ChatMessage sendMessage(@DestinationVariable String roomId, ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+    public ChatMessage sendMessage(@DestinationVariable String roomId, @Payload String payload, SimpMessageHeaderAccessor headerAccessor) {
+        logger.debug("Raw payload received: {}", payload);
+        
+        ObjectMapper objectMapper = new ObjectMapper();
+        ChatMessage chatMessage;
+        try {
+            chatMessage = objectMapper.readValue(payload, ChatMessage.class);
+        } catch (Exception e) {
+            logger.error("Failed to parse ChatMessage: {}", e.getMessage());
+            throw new RuntimeException("Failed to parse message", e);
+        }
+        
+        logger.debug("Received message - roomId: {}, sender: {}, senderRole: {}, content: {}", 
+                    roomId, chatMessage.sender(), chatMessage.senderRole(), chatMessage.content());
         return processMessageAsync(roomId, chatMessage, MessageType.CHAT, headerAccessor)
                 .join();
     }
 
     @MessageMapping("/chat.joinRoom/{roomId}")
     @SendTo("/topic/room/{roomId}")
-    public ChatMessage joinRoom(@DestinationVariable String roomId, ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+    public ChatMessage joinRoom(@DestinationVariable String roomId, @Payload String payload, SimpMessageHeaderAccessor headerAccessor) {
+        logger.debug("Raw payload received: {}", payload);
+        
+        ObjectMapper objectMapper = new ObjectMapper();
+        ChatMessage chatMessage;
+        try {
+            chatMessage = objectMapper.readValue(payload, ChatMessage.class);
+        } catch (Exception e) {
+            logger.error("Failed to parse ChatMessage: {}", e.getMessage());
+            throw new RuntimeException("Failed to parse message", e);
+        }
+        
+        logger.debug("Join request - roomId: {}, sender: {}, senderRole: {}", 
+                    roomId, chatMessage.sender(), chatMessage.senderRole());
         String sessionId = headerAccessor.getSessionId();
         headerAccessor.getSessionAttributes().put("roomId", roomId);
         headerAccessor.getSessionAttributes().put("username", chatMessage.sender());
